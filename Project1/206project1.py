@@ -2,6 +2,7 @@ import os
 import csv
 import sys
 import operator
+import filecmp
 import datetime
 
 def getData(file):
@@ -151,9 +152,11 @@ def mySortPrint(a,col,fileName):
 	sortedinfo = sorted(a, key= lambda x: x[col])
 	csvfile= open(fileName, "w")
 	for item in range(len(sortedinfo)):
-		stringcsvinfo = sortedinfo[item]['First']+ "," + sortedinfo[item]['Last'] + "," + sortedinfo[item]['Email'] + "," + sortedinfo[item]['Class'] + "," + sortedinfo[item]['DOB']
+		stringcsvinfo = sortedinfo[item]['First']+ "," + sortedinfo[item]['Last'] + "," + sortedinfo[item]['Email']  + "," + "\n"
+		#
 		csvfile.write(stringcsvinfo)
 	csvfile.close()
+	return(None)
 	# exit()
 	# #csv file is the variable and set it equal to the file we open with
 	# for dic in sortedinfo:
@@ -186,7 +189,7 @@ def main():
 	print("Read in Test data and store as a list of dictionaries")
 	data = getData('P1DataA.csv')
 	data2 = getData('P1DataB.csv')
-	total += test(type(data),type([]),35)
+	total += test(type(data),type([]),40)
 	print()
 	print("First student sorted by First name:")
 	total += test(mySort(data,'First'),'Abbot Le',15)

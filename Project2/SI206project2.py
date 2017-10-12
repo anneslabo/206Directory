@@ -1,7 +1,7 @@
 ## SI 206 W17 - Project 2
 
 ## COMMENT HERE WITH:
-## Your name:
+## Your name: Annie Slabotsky
 ## Anyone you worked with on this project:
 
 ## Below we have provided import statements, comments to separate out the
@@ -14,6 +14,7 @@ import unittest
 import requests
 import re
 from bs4 import BeautifulSoup
+from urllib.request import urlopen
 
 
 
@@ -29,8 +30,16 @@ from bs4 import BeautifulSoup
 
 def find_urls(s):
 
-    
-    exit()
+#in the string find anything that starts with http (that is fixed)
+#the [s] is optional like https and the s only is there one or 0 times
+#the ? means we will find 0 or 1
+#then find colon two back slash
+#the ,s separates two input variables (s is string find links in string )
+#\S+ skip any whitespace until... find .
+#then there should be at least 2 letters lower case a-z or upper case a-z
+    url = re.findall('http[s]?://\S+\.[a-zA-Z]{2,}',s)
+    print(url)
+    return url
 
 
 
@@ -40,9 +49,20 @@ def find_urls(s):
 ## http://www.michigandaily.com/section/opinion
 
 def grab_headlines():
-    pass
-    #Your code here
+    f = open("opinion.html","r")
+    text_data_from_file = f.read()
+    soup = BeautifulSoup(text_data_from_file, "html.parser")
+    #print(soup)
+    #find something that has class of
+    title = soup.find_all(class_ = 'view-most-read')
+    for t in title:
+    #    new = titles.append(t.get_text().split('\n'))
+        new = t.get_text().split('\n')
 
+        new = [x for x in new if x != '']
+
+    #Your code here
+    return(new[0:5])
 
 
 ## PART 3 (a) Define a function called get_umsi_data.  It should create a dictionary
@@ -57,15 +77,67 @@ def grab_headlines():
 ## requests.get(base_url, headers={'User-Agent': 'SI_CLASS'})
 
 def get_umsi_data():
-    pass
-    #Your code here
+    base_url = "https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All"
+    umsi_titles = {}
+    garbage =  []
+    names = []
+    titlesList = []
+    for count in range(0,13):
+        data = requests.get(base_url, headers={'User-Agent': 'SI_CLASS'}, params = {"page":count})
+        soup = BeautifulSoup(data.text, 'html.parser')
+
+
+
+        # name = soup.find_all(class_ = 'field field-name-title field-type-ds field-label-hidden')
+        # print(name[0].get('h2'))
+        # title = soup.find_all(class_ = 'field-item even')
+        tags = soup('h2')
+
+        # for tag in tags:
+        #     elif "You" in tag.text:
+        #         garbage.append(tag)
+        #     elif "Inspiration" in tag.text:
+        #         garbage.append(tag)
+        #     elif "Resources" in tag.text:
+        #         garbage.append(tag)
+        #     # elif "href" in tag:
+        #     #     garbage.append(tag)
+        #     else:
+        #         names.append(tag.text)
+        titles = soup.find_all(class_ = 'field-item even')
+        # print(titles)
+        for name in titles:
+            if "property" in name.attrs:
+                names.append(name.text)
+        for title in titles:
+            if title.get('href') != None:
+                garbage.append(title)
+            elif title.a != None:
+                garbage.append(title)
+            elif "property" in title.attrs:
+                 garbage.append(title)
+            # if title.get('div') != 0:
+            #     print(title)
+            else: titlesList.append(title.text)
+        #you may  need even
+        # for names in name:
+        #
+        # base_url = base_url
+        # base_url = base_url+"&page="-int(count)
+    umsi_titles = dict(zip(names, titlesList))
+    return (umsi_titles)
+
 
 ## PART 3 (b) Define a function called num_students.
 ## INPUT: The dictionary from get_umsi_data().
 ## OUTPUT: Return number of PhD students in the data.  (Don't forget, I may change the input data)
 def num_students(data):
-    pass
-    #Your code here
+    number = 0
+    for title in data:
+        if (data[title] == "PhD student"):
+            number = number + 1
+    return (number)
+
 
 
 
@@ -83,6 +155,7 @@ def test(got, expected, pts):
 
 
 def main():
+    get_umsi_data()
     total = 0
     print()
     print ('Task 1: Find URLS')

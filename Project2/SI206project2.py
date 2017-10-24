@@ -17,12 +17,6 @@ from bs4 import BeautifulSoup
 from urllib.request import urlopen
 
 
-
-## Part 1 -- Define your find_urls function here.
-## INPUT: any string
-## RETURN VALUE: a list of strings that represents all of the URLs in the input string
-
-
 ## For example:
 ## find_urls("http://www.google.com is a great site") should return ["http://www.google.com"]
 ## find_urls("I love looking at websites like http://etsy.com and http://instagram.com and stuff") should return ["http://etsy.com","http://instagram.com"]
@@ -30,13 +24,7 @@ from urllib.request import urlopen
 
 def find_urls(s):
 
-#in the string find anything that starts with http (that is fixed)
-#the [s] is optional like https and the s only is there one or 0 times
-#the ? means we will find 0 or 1
-#then find colon two back slash
-#the ,s separates two input variables (s is string find links in string )
-#\S+ skip any whitespace until... find .
-#then there should be at least 2 letters lower case a-z or upper case a-z
+
     url = re.findall('http[s]?://\S+\.[a-zA-Z]{2,}',s)
     print(url)
     return url
@@ -49,9 +37,11 @@ def find_urls(s):
 ## http://www.michigandaily.com/section/opinion
 
 def grab_headlines():
-    f = open("opinion.html","r")
-    text_data_from_file = f.read()
-    soup = BeautifulSoup(text_data_from_file, "html.parser")
+    # f = open("http://www.michigandaily.com/section/opinion","r")
+    # text_data_from_file = f.read()
+    url = "http://www.michigandaily.com/section/opinion"
+    site = urlopen(url)
+    soup = BeautifulSoup(site, "html.parser")
     #print(soup)
     #find something that has class of
     title = soup.find_all(class_ = 'view-most-read')

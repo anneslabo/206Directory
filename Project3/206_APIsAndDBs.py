@@ -97,7 +97,7 @@ print(umich_tweets)
 conn = sqlite3.connect('206_APIsAndDBs.sqlite')
 cur = conn.cursor()
 cur.execute('DROP TABLE IF EXITS Tweets')
-cur.execute('CREATE TABLE Tweets (tweet_id TEXT, tweet_text TEXT, user_posted TEXT, time_posted, retweets NUMBER)')
+cur.execute('CREATE TABLE Tweets (tweet_id TEXT, tweet_text TEXT, user_posted TEXT, time_posted TIMESTAMP, retweets NUMBER)')
 for tw in umich_tweets:
     tup = tw["id"], tw["text"], tw["created_at"],tw["user"]['screen_name'], tw["created_at"], tw["retweet_count"]
     cur.execute['INSERT INTO Tweets (tweet_id, tweet_text, user_posted, time_posted, retweets) VALUES (?, ?, ?, ?, ?)', tup]

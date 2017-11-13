@@ -96,20 +96,25 @@ print(umich_tweets)
 # in the Users table, etc.
 conn = sqlite3.connect('206_APIsAndDBs.sqlite')
 cur = conn.cursor()
-cur.execute('DROP TABLE IF EXITS Tweets')
-cur.execute('CREATE TABLE Tweets (tweet_id TEXT, tweet_text TEXT, user_posted TEXT, time_posted TIMESTAMP, retweets NUMBER)')
+cur.execute('DROP TABLE IF EXISTS Tweets')
+cur.execute('CREATE TABLE Tweets (tweet_id TEXT, tweet_text TEXT, user_posted INTEGER, time_posted TIMESTAMP, retweets INTEGER, PRIMARY KEY (tweet_id))')
 for tw in umich_tweets:
-    tup = tw["id"], tw["text"], tw["created_at"],tw["user"]['screen_name'], tw["created_at"], tw["retweet_count"]
-    cur.execute['INSERT INTO Tweets (tweet_id, tweet_text, user_posted, time_posted, retweets) VALUES (?, ?, ?, ?, ?)', tup]
+    tup = tw["id"], tw["text"], tw["user"]['screen_name'], tw["created_at"], tw["retweet_count"]
+    cur.execute('INSERT INTO Tweets (tweet_id, tweet_text, user_posted, time_posted, retweets) VALUES (?, ?, ?, ?, ?)', tup)
 #  5- Use the database connection to commit the changes to the database
 
 conn.commit()
 
-cur.execute('DROP TABLE IF EXITS Users')
-cur.execute('CREATE Users Tweets (user_id TEXT, screen_name TEXT, num_favs NUMBER, description TEXT)')
+cur.execute('DROP TABLE IF EXISTS Users')
+cur.execute('CREATE TABLE Users (user_id TEXT UNIQUE, screen_name VARCHAR, num_favs INTEGER, description TEXT, PRIMARY KEY (user_id))')
+userslist = []
 for tw in umich_tweets:
-    tup = tw["id"], tw["text"], tw["user"]['screen_name'], tw["favorite_count"], tw["retweet_count"]
-    cur.execute['INSERT INTO Tweets (tweet_id, tweet_text, user_posted, time_posted, retweets) VALUES (?, ?, ?, ?, ?)', tup]
+    tup_id = tw["user"]["id"]
+    cur.execute("SELECT user_id FROM Users WHERE user_id = (?)", tup_id)
+    userslist = cur.fetchall()
+    if userslist is empty:
+        tup = tw["user"]["id"], tw["user"]['screen_name'], tw["user"]["favourites_count"], tw["user"]["description"]
+        cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', tup)
 #  5- Use the database connection to commit the changes to the database
 
 conn.commit()
@@ -139,7 +144,7 @@ conn.commit()
 # Make a query to select all of the records in the Users database.
 # Save the list of tuples in a variable called users_info.
 
-users_info = True 
+users_info = True
 
 # Make a query to select all of the user screen names from the database.
 # Save a resulting list of strings (NOT tuples, the strings inside them!)
@@ -158,7 +163,7 @@ retweets = True
 # the users who have favorited more than 500 tweets. Access all those
 # strings, and save them in a variable called favorites,
 # which should ultimately be a list of strings.
-favorites = True
+favorites = []
 
 
 # Make a query using an INNER JOIN to get a list of tuples with 2

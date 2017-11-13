@@ -139,7 +139,7 @@ conn.commit()
 # Make a query to select all of the records in the Users database.
 # Save the list of tuples in a variable called users_info.
 
-users_info = True
+users_info = True 
 
 # Make a query to select all of the user screen names from the database.
 # Save a resulting list of strings (NOT tuples, the strings inside them!)

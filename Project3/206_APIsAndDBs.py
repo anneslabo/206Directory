@@ -59,33 +59,41 @@ except:
     CACHE_DICTION = {}
 
 
+
 # Put the rest of your caching setup here:
 
-
+conn = sqlite3.connect('206_APIsAndDBs.sqlite')
+cur = conn.cursor()
+cur.execute('DROP TABLE IF EXISTS Tweets')
+cur.execute('CREATE TABLE Tweets (tweet_id TEXT, tweet_text TEXT, user_posted INTEGER, time_posted TIMESTAMP, retweets INTEGER, PRIMARY KEY (tweet_id))')
+cur.execute('DROP TABLE IF EXISTS Users')
+cur.execute('CREATE TABLE Users (user_id TEXT UNIQUE, screen_name VARCHAR, num_favs INTEGER, description TEXT, PRIMARY KEY (user_id))')
 
 # Define your function get_user_tweets here:
 
 
 def get_user_tweets(user):
-	if user in CACHE_DICTION:
-		print('using cached data')
-		return CACHE_DICTION[user]
-	else:
-		print('getting data from internet')
-		twitter_results = api.user_timeline(user)
-		CACHE_DICTION[user] = twitter_results
-		result = CACHE_DICTION[user]
-		f = open(CACHE_FNAME, 'w')
-		f.write(json.dumps(CACHE_DICTION))
-		f.close()
-		return result
+    if user in CACHE_DICTION:
+        print('using cached data')
+        results = CACHE_DICTION[user]
+        #print(results)
+        #return CACHE_DICTION[user]
+    else:
+        print('getting data from internet')
+        twitter_results = api.user_timeline(user)
+        CACHE_DICTION[user] = twitter_results
+        results = CACHE_DICTION[user]
+        f = open(CACHE_FNAME, 'w')
+        f.write(json.dumps(CACHE_DICTION))
+        f.close()
+        #print(result)
+    write_to_DB(results)
+    return results
 
 
 # Write an invocation to the function for the "umich" user timeline and
 # save the result in a variable called umich_tweets:
-umich_tweets = get_user_tweets('@umich')
 
-print(umich_tweets)
 
 ## Task 2 - Creating database and loading data into database
 ## You should load into the Users table:
@@ -94,30 +102,46 @@ print(umich_tweets)
 # NOTE: For example, if the user with the "TedXUM" screen name is
 # mentioned in the umich timeline, that Twitter user's info should be
 # in the Users table, etc.
-conn = sqlite3.connect('206_APIsAndDBs.sqlite')
-cur = conn.cursor()
-cur.execute('DROP TABLE IF EXISTS Tweets')
-cur.execute('CREATE TABLE Tweets (tweet_id TEXT, tweet_text TEXT, user_posted INTEGER, time_posted TIMESTAMP, retweets INTEGER, PRIMARY KEY (tweet_id))')
-for tw in umich_tweets:
-    tup = tw["id"], tw["text"], tw["user"]['screen_name'], tw["created_at"], tw["retweet_count"]
-    cur.execute('INSERT INTO Tweets (tweet_id, tweet_text, user_posted, time_posted, retweets) VALUES (?, ?, ?, ?, ?)', tup)
+
+
+def write_to_DB(tweets):
+    #print("abc")
+    for tw in tweets:
+        #print("==============================\n")
+        tup = tw["id"], tw["text"], tw["user"]['id_str'], tw["created_at"], tw["retweet_count"]
+        #print(tw)
+        tw_id =  tw["id"]
+        #print(type(tw_id))
+        cur.execute("SELECT * FROM Tweets WHERE tweet_id = (?)",(str(tw_id),))
+        tweet_exists = cur.fetchall()
+        if len(tweet_exists) == 0:
+            cur.execute('INSERT INTO Tweets (tweet_id, tweet_text, user_posted, time_posted, retweets) VALUES (?, ?, ?, ?, ?)', tup)
 #  5- Use the database connection to commit the changes to the database
 
-conn.commit()
+    conn.commit()
 
-cur.execute('DROP TABLE IF EXISTS Users')
-cur.execute('CREATE TABLE Users (user_id TEXT UNIQUE, screen_name VARCHAR, num_favs INTEGER, description TEXT, PRIMARY KEY (user_id))')
-userslist = []
-for tw in umich_tweets:
-    tup_id = tw["user"]["id"]
-    cur.execute("SELECT user_id FROM Users WHERE user_id = (?)", tup_id)
-    userslist = cur.fetchall()
-    if userslist is empty:
+
+    userslist = []
+    for tw in tweets:
+        tup_id = (tw["user"]["id"],)
+
+
         tup = tw["user"]["id"], tw["user"]['screen_name'], tw["user"]["favourites_count"], tw["user"]["description"]
-        cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', tup)
+        cur.execute("SELECT user_id FROM Users WHERE user_id = (?)", tup_id)
+        userslist = cur.fetchall()
+        if len(userslist) == 0:
+            cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', tup)
+
+
 #  5- Use the database connection to commit the changes to the database
 
-conn.commit()
+    conn.commit()
+    return ''
+
+
+umich_tweets = get_user_tweets('@umich')
+umich_tweets = get_user_tweets('@umsi')
+#print(umich_tweets)
 
 ## You should load into the Tweets table:
 # Info about all the tweets (at least 20) that you gather from the
@@ -144,19 +168,33 @@ conn.commit()
 # Make a query to select all of the records in the Users database.
 # Save the list of tuples in a variable called users_info.
 
-users_info = True
+users_info = ()
+cur.execute("SELECT * FROM Users")
+users = cur.fetchall()
+for user in users:
+    user = (user,)
+users_info = users
+
 
 # Make a query to select all of the user screen names from the database.
 # Save a resulting list of strings (NOT tuples, the strings inside them!)
 # in the variable screen_names. HINT: a list comprehension will make
 # this easier to complete!
-screen_names = True
+screen_names = []
+cur.execute("SELECT screen_name FROM Users")
+names = cur.fetchall()
+for name in names:
+    screen_names.append(name[0])
 
 
 # Make a query to select all of the tweets (full rows of tweet information)
 # that have been retweeted more than 10 times. Save the result
 # (a list of tuples, or an empty list) in a variable called retweets.
-retweets = True
+retweets = []
+cur.execute("SELECT * FROM Tweets WHERE retweets > 10")
+tweets = cur.fetchall()
+for tweet in tweets:
+    retweets.append(tweet)
 
 
 # Make a query to select all the descriptions (descriptions only) of
@@ -164,19 +202,38 @@ retweets = True
 # strings, and save them in a variable called favorites,
 # which should ultimately be a list of strings.
 favorites = []
+cur.execute("SELECT description FROM Users WHERE num_favs > 500")
+users = cur.fetchall()
+for user in users:
+    favorites.append(user[0])
+
+
 
 
 # Make a query using an INNER JOIN to get a list of tuples with 2
 # elements in each tuple: the user screenname and the text of the
 # tweet. Save the resulting list of tuples in a variable called joined_data2.
-joined_data = True
+
+cur.execute("SELECT Users.user_id, Tweets.user_posted From Users join Tweets on Users.user_id = Tweets.user_posted")
+
+joined_data = []
+
+joined_data = cur.fetchall()
+
+
 
 # Make a query using an INNER JOIN to get a list of tuples with 2
 # elements in each tuple: the user screenname and the text of the
 # tweet in descending order based on retweets. Save the resulting
 # list of tuples in a variable called joined_data2.
 
-joined_data2 = True
+joined_data2 = []
+cur.execute("SELECT Users.user_id, Tweets.user_posted, Tweets.retweets From Users join Tweets on Users.user_id = Tweets.user_posted ORDER BY Tweets.retweets DESC ")
+joined_data2 = cur.fetchall()
+
+# for item in tempdata:
+#     joined_data2.append(item[0])
+# print(type(tempdata))
 
 
 ### IMPORTANT: MAKE SURE TO CLOSE YOUR DATABASE CONNECTION AT THE END
@@ -187,6 +244,8 @@ joined_data2 = True
 ###### Note that the tests are necessary to pass, but not sufficient --
 ###### must make sure you've followed the instructions accurately!
 ######
+
+
 print("\n\nBELOW THIS LINE IS OUTPUT FROM TESTS:\n")
 
 
@@ -285,3 +344,4 @@ class Task3(unittest.TestCase):
 
 if __name__ == "__main__":
 	unittest.main(verbosity=2)
+cur.close()

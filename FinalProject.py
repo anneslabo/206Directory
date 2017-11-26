@@ -1,4 +1,4 @@
-#Final Project Anne Slabotsky
+#Final Project Annie Slabotsky
 import unittest
 import itertools
 import collections

@@ -60,15 +60,20 @@ def get_FB_data():
     # print (FB_results)
     return FB_results
 
+
+conn = sqlite3.connect('FB_DATA.sqlite')
+cur = conn.cursor()
+cur.execute('DROP TABLE IF EXISTS FB_DATA')
+cur.execute('CREATE TABLE FB_DATA (id TEXT, name TEXT, type INTEGER, created_time TIMESTAMP)')
+
 def write_to_DB(FB_results):
     #print("abc")
     for item in FB_results:
         #print("==============================\n")
         tup = item["id"], item["name"], item["type"], item["created_time"]
         #print(tw)
-        tw_id =  tw["id"]
         #print(type(tw_id))
-    cur.execute('INSERT INTO ITEMS (id, name, type, created_time) VALUES (?, ?, ?, ?)', tup)
+        cur.execute('INSERT INTO ITEMS (id, name, type, created_time) VALUES (?, ?, ?, ?)', tup)
 #  5- Use the database connection to commit the changes to the database
 
     conn.commit()

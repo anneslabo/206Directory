@@ -35,8 +35,12 @@ def d_o_w(year, month, day, time):
               'Friday',
               'Saturday']
     answer = datetime.date(int(year), int(month), int(day)).weekday()
-    if int(time[:2]) > 12:
+    if int(time[:2]) > 18:
+        t_o_d = 'night'
+    elif int(time[:2]) > 12:
         t_o_d = 'evening'
+    elif int(time[:2]) > 6:
+        t_o_d = 'mid-morning'
     else:
         t_o_d = 'morning'
     if answer == 1:
@@ -178,25 +182,73 @@ except:
 def get_darksky_data():
 
         print('getting data from internet')
-
-        # url = 'https://api.darksky.net/forecast/7dba11f5dc3471a2b9ae84225f3042d4/26.714913,-80.033776'
-        url =  'https://api.darksky.net/forecast/7dba11f5dc3471a2b9ae84225f3042d4/26.714913,-80.033776,1512353857'
+        #west palm beach
+        wpb = []
+        url1 = 'https://api.darksky.net/forecast/7dba11f5dc3471a2b9ae84225f3042d4/26.714913,-80.033776'
         # urlparams["access_token"] = access_token
         # #urlparams["fields"] = "created_time,message,likes,comments,reactions,type"
         #
         # url = 'https://api.spotify.com/v1/users/12160022617'
-        request = requests.get(url)
+        request = requests.get(url1)
 
 # you need to generate a new access token frequently because that is how facebook is set up
 
         code = str(request.status_code)
         darksky_results = json.loads(request.text)
+        # print(darksky_results.keys())
         #this is a function that will takes the top 100 posts from what I retrieve from dark sky
         # darksky_results = {x: darksky_results[x] for x in heapq.nsmallest(darksky_results, 100, key=int)}
         # print(darksky_results)
-        for item in darksky_results['hourly']:
-            print(item['temperature'])
-        #create cache file with FB stuff
+        # for item in darksky_results['hourly']:
+        #     print(item['temperature'])
+        miami_beach = []
+        url2 = 'https://api.darksky.net/forecast/7dba11f5dc3471a2b9ae84225f3042d4/25.781988,-80.131004'
+        ##clear water
+        clear_water = []
+        url3 = 'https://api.darksky.net/forecast/7dba11f5dc3471a2b9ae84225f3042d4/27.953014,-82.831831'
+        #naples beach
+        naples = []
+        url4 = 'https://api.darksky.net/forecast/7dba11f5dc3471a2b9ae84225f3042d4/26.150900,-81.805014'
+
+        #Daytona beach
+        daytona = []
+        url5 = 'https://api.darksky.net/forecast/7dba11f5dc3471a2b9ae84225f3042d4/29.223133,-81.007349'
+
+        request = requests.get(url1)
+        code = str(request.status_code)
+        darksky_results1 = json.loads(request.text)
+        for item in (darksky_results['daily']['data']):
+             wpb.append(item['precipProbability'])
+
+        request = requests.get(url2)
+        code = str(request.status_code)
+        darksky_results2 = json.loads(request.text)
+        for item in (darksky_results2['daily']['data']):
+            miami_beach.append(item['precipProbability'])
+
+        # request = requests.get(url3)
+        # code = str(request.status_code)
+        # darksky_results3 = json.loads(request.text)
+        # for item in (darksky_results3['daily']['data']):
+        #     clear_water(item['precipProbability'])
+
+        request = requests.get(url4)
+        code = str(request.status_code)
+        darksky_results4 = json.loads(request.text)
+        for item in (darksky_results4['daily']['data']):
+            naples.append(item['precipProbability'])
+
+        request = requests.get(url5)
+        code = str(request.status_code)
+        darksky_results5 = json.loads(request.text)
+        for item in (darksky_results5['daily']['data']):
+            daytona.append(item['precipProbability'])
+
+
+            print(datetime.datetime.fromtimestamp(int("1284101485")).strftime('%Y-%m-%d %H:%M:%S')
+)
+
+        #create cache file with Weather stuff
         f = open(CACHE_FNAME, 'w')
         f.write(json.dumps(darksky_results))
         f.close()
@@ -221,3 +273,9 @@ if __name__ == "__main__":
 #         # print(row)
 #         writer_object.writerow(row)
     get_darksky_data()
+# with open ('DARKSKY.csv', 'w', newline='') as ds_csv:
+#     writer_object =  csv.writer(ds_csv)
+#     writer_object.writerow(['day', 'time'])
+#     for row in list_tup_data:
+#         # print(row)
+#         writer_object.writerow(row)

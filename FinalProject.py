@@ -1,5 +1,26 @@
 #Final Project Annie Slabotsky
 # link for plot.ly diagram = https://plot.ly/~anneslabo/2/
+from __future__ import print_function
+import httplib2
+import os
+from httplib2 import Http
+
+from apiclient import discovery
+from apiclient import errors
+from httplib2 import Http
+# from oauth2client import file, client, tools
+import base64
+from bs4 import BeautifulSoup
+import re
+import time
+import dateutil.parser as parser
+from datetime import datetime
+import datetime
+
+from apiclient import discovery
+from oauth2client import client
+from oauth2client import tools
+from oauth2client.file import Storage
 import unittest
 import itertools
 import collections
@@ -218,13 +239,18 @@ def get_darksky_data():
         code = str(request.status_code)
         darksky_results1 = json.loads(request.text)
         for item in (darksky_results['daily']['data']):
-             wpb.append(item['precipProbability'])
+            timee = (item['time'])
+            correct_time = (datetime.datetime.fromtimestamp(int(timee)).strftime('%Y-%m-%d %H:%M:%S'))
+            wpb.append(tuple((item['precipProbability'], correct_time)))
+
 
         request = requests.get(url2)
         code = str(request.status_code)
         darksky_results2 = json.loads(request.text)
         for item in (darksky_results2['daily']['data']):
-            miami_beach.append(item['precipProbability'])
+            timee = (item['time'])
+            correct_time = (datetime.datetime.fromtimestamp(int(timee)).strftime('%Y-%m-%d %H:%M:%S'))
+            miami_beach.append(tuple((item['precipProbability'], correct_time)))
 
         # request = requests.get(url3)
         # code = str(request.status_code)
@@ -236,17 +262,18 @@ def get_darksky_data():
         code = str(request.status_code)
         darksky_results4 = json.loads(request.text)
         for item in (darksky_results4['daily']['data']):
-            naples.append(item['precipProbability'])
+            timee = (item['time'])
+            correct_time = (datetime.datetime.fromtimestamp(int(timee)).strftime('%Y-%m-%d %H:%M:%S'))
+            naples.append(tuple((item['precipProbability'], correct_time)))
+
 
         request = requests.get(url5)
         code = str(request.status_code)
         darksky_results5 = json.loads(request.text)
         for item in (darksky_results5['daily']['data']):
-            daytona.append(item['precipProbability'])
-
-
-            print(datetime.datetime.fromtimestamp(int("1284101485")).strftime('%Y-%m-%d %H:%M:%S')
-)
+            timee = (item['time'])
+            correct_time = (datetime.datetime.fromtimestamp(int(timee)).strftime('%Y-%m-%d %H:%M:%S'))
+            daytona.append(tuple((item['precipProbability'], correct_time)))
 
         #create cache file with Weather stuff
         f = open(CACHE_FNAME, 'w')
@@ -254,11 +281,114 @@ def get_darksky_data():
         f.close()
 
     # print (FB_results)
+        with open ('WPB_ds.csv', 'w', newline='') as ds_csv:
+            writer_object =  csv.writer(ds_csv)
+            writer_object.writerow(['weather', 'date'])
+            for row in wpb:
+                # print(row)
+                writer_object.writerow(row)
+        with open ('miami_beach_DK_ds.csv', 'w', newline='') as ds_csv:
+            writer_object =  csv.writer(ds_csv)
+            writer_object.writerow(['weather', 'date'])
+            for row in miami_beach:
+                # print(row)
+                writer_object.writerow(row)
+
+        with open ('naples_ds_ds.csv', 'w', newline='') as ds_csv:
+            writer_object =  csv.writer(ds_csv)
+            writer_object.writerow(['weather', 'date'])
+            for row in naples:
+                # print(row)
+                writer_object.writerow(row)
+        with open ('daytona_ds.csv', 'w', newline='') as ds_csv:
+            writer_object =  csv.writer(ds_csv)
+            writer_object.writerow(['weather', 'date'])
+            for row in daytona:
+                # print(row)
+                writer_object.writerow(row)
         return darksky_results
 
 
 # ==========================================================================================
-# dark sky API
+# gmail
+
+
+try:
+    import argparse
+    flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
+except ImportError:
+    flags = None
+
+# If modifying these scopes, delete your previously saved credentials
+# at ~/.credentials/gmail-python-quickstart.json
+SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
+CLIENT_SECRET_FILE = 'client_secret.json'
+APPLICATION_NAME = 'Gmail API Python Quickstart'
+
+
+def get_credentials():
+    """Gets valid user credentials from storage.
+
+    If nothing has been stored, or if the stored credentials are invalid,
+    the OAuth2 flow is completed to obtain the new credentials.
+
+    Returns:
+        Credentials, the obtained credential.
+    """
+    home_dir = os.path.expanduser('~')
+    credential_dir = os.path.join(home_dir, '.credentials')
+    if not os.path.exists(credential_dir):
+        os.makedirs(credential_dir)
+    credential_path = os.path.join(credential_dir,'gmail-python-quickstart.json')
+
+    store = Storage(credential_path)
+    credentials = store.get()
+    if not credentials or credentials.invalid:
+        flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
+        flow.user_agent = APPLICATION_NAME
+        if flags:
+            credentials = tools.run_flow(flow, store, flags)
+        else:
+            credentials = tools.run(flow, store)
+        print('Storing credentials to ' + credential_path)
+
+    GMAIL = discovery.build('gmail', 'v1', http=credentials.authorize(Http()))
+
+    user_id =  'me'
+    label_id_one = 'INBOX'
+    label_id_two = 'UNREAD'
+
+
+    unread_messages = GMAIL.users().messages().list(userId='me',labelIds=[label_id_one, label_id_two]).execute()
+
+    # -- read values for the key "messages"
+
+    message_list = unread_messages['messages']
+
+    print ("Total unread messages in inbox: ", str(len(message_list)))
+
+
+
+
+def main():
+    """Shows basic usage of the Gmail API.
+
+    Creates a Gmail API service object and outputs a list of label names
+    of the user's Gmail account.
+    """
+    credentials = get_credentials()
+    http = credentials.authorize(httplib2.Http())
+    service = discovery.build('gmail', 'v1', http=http)
+
+    results = service.users().labels().list(userId='me').execute()
+    labels = results.get('labels', [])
+
+    if not labels:
+        print('No labels found.')
+    else:
+      print('Labels:')
+      for label in labels:
+        print(label['name'])
 
 
 
@@ -273,9 +403,4 @@ if __name__ == "__main__":
 #         # print(row)
 #         writer_object.writerow(row)
     get_darksky_data()
-# with open ('DARKSKY.csv', 'w', newline='') as ds_csv:
-#     writer_object =  csv.writer(ds_csv)
-#     writer_object.writerow(['day', 'time'])
-#     for row in list_tup_data:
-#         # print(row)
-#         writer_object.writerow(row)
+    main()
